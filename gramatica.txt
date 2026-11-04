@@ -1,0 +1,32 @@
+(1) program            → PROGRAM identifier ; block .
+
+(2) block              → declaration_part statement_part
+
+(3) declaration_part   → VAR declaration_list | ε
+(4) declaration_list   → declaration ; declaration_list  | declaration
+(5) declaration        → identifier_list : type
+(6) identifier_list    → identifier , identifier_list  | identifier
+(7) type               → INTEGER | REAL | BOOLEAN
+
+(8) statement_part     → BEGIN statement_list END
+(9) statement_list     → statement ; statement_list  | statement
+(10)statement          → assignment | if_statement  | while_statement  | compound_statement
+                     | read_statement | write_statement
+
+(11)assignment         → identifier := expression
+(12)if_statement       → IF expression THEN statement ELSE statement
+(13)while_statement    → WHILE expression DO statement
+(14)compound_statement → BEGIN statement_list END
+
+(15)read_statement     → READ ( identifier_list )
+(16)write_statement    → WRITE ( write_list )
+(17)write_list         → write_item , write_list | write_item
+(18)write_item         → expression | string_literal
+
+(19)expression         → simple_expression relop simple_expression  | simple_expression
+(20)simple_expression  → term addop term | term
+(21)term               → factor mulop factor | factor
+(22)factor             → identifier | number | ( expression )
+(23)relop              → = | <> | < | <= | > | >=
+(24)addop              → + | - | OR
+(25)mulop              → * | / | AND
