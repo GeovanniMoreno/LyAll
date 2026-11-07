@@ -1,130 +1,136 @@
 package ConPascal;
 
-/*
-PARSER CON LA GRMÁTICA MAS LARGA
+import java.util.List;
+
+/**
+ * Analizador Sintáctico y Semántico para Pascal (Reglas 1 a 25).
  */
 public class Parser {
     private Lexer lexer;
     private Token current;
-    private Symbol symbolTable;
-    
-    public Parser (Lexer lexer){
+    private SymbolTable symbolTable;
+
+    public Parser(Lexer lexer) {
         this.lexer = lexer;
         this.current = lexer.nexToken();
-        //this.symbolTable = new Symbol();
+        this.symbolTable = new SymbolTable();
     }
-    
-    //Método de parser con match
-    private void match (TokenType type){
-        if(current.atributo == type){
+
+    private void match(TokenType type) {
+        if(current.atributo == type) {
             current = lexer.nexToken();
         }else {
             throw new RuntimeException("ERROR esperabamos: " + type + "y tenemos: " + current.lexema);
         }
     }
-    
-    public Nodo evaluar(){
-        //Igual que en el otro parser, el primer método corresponde a la primera regla
+
+    public Nodo evaluar() {
         return parseProgram();
     }
-    
-    //(1)program → PROGRAM identifier ; block.
-    public Nodo parseProgram(){
+
+    // (1) program → PROGRAM identifier ; block .
+    public Nodo parseProgram() {
         match(TokenType.PROGRAM);
         
         String nombrePrgm = current.lexema;
         match(TokenType.ID);
         
         match(TokenType.SEMICOLON);
-        
+
         Nodo bloque = parseBlock();
-        
+
         match(TokenType.DOT);
-    return new NodoPrograma(nombrePrgm, bloque);   
+    return new NodoPrograma(nombrePrgm, bloque);
     }
-    
-    //(2)block → declaration_part statement_part
-    public Nodo parseBlock(){
+
+    // (2) block → declaration_part statement_part
+    public Nodo parseBlock() {
         Nodo d = parseDeclPart();
         Nodo s = parseStamentPart();
     return new NodoBlock(d, s);
     }
-    
-    //(3)declaration_part → VAR declaration_list | ε
-    public Nodo parseDeclPart(){
-        if(current.atributo == TokenType.VAR){
-           match(TokenType.VAR);
-           
-           Nodo dL = parseDeclList();
-        return new NodoDeclPart(dL);
+
+    // (3) declaration_part → VAR declaration_list | ε
+    public Nodo parseDeclPart() {
+        if(current.atributo == TokenType.VAR) {
+            match(TokenType.VAR);
+            
+            return parseDeclList();
         }
     //Aquí hay que checar si esta bien que el vacío se devuelva así
     return null;
     }
-    
-    //(4)declaration_list → declaration ; declaration_list  | declaration
-    public Nodo parseDeclList(){
+
+    // (4) declaration_list → declaration ; declaration_list | declaration
+    public Nodo parseDeclList() {
         Nodo decl = parseDeclaration();
-        
-        if(current.atributo == TokenType.SEMICOLON){
+
+        if(current.atributo == TokenType.SEMICOLON) {
             match(TokenType.SEMICOLON);
             
-            Nodo dL = parseDeclList();
-            while(dL !=null){
-                /*Aquí debe volver a evaluar con parseDeclList y agregar a una lista
-                  o a la tabla de símbolos la declaración encontrada
-                */
-                return new NodoDeclList(decl, dL);
+            if(current.atributo != TokenType.ID) {
+                return decl;
             }
+            
+            Nodo dL = parseDeclList();
+            return new NodoDeclList(decl, dL);
         }
-        return parseDeclaration();
+        return decl;
     }
-    
-    //(5)declaration → identifier_list : type
-    public Nodo parseDeclaration(){
+
+    // (5) declaration → identifier_list : type
+    public Nodo parseDeclaration() {
         Nodo idenLis = parseIdentLis();
         
         match(TokenType.COLON);
         
         Nodo type = parseType();
+
+        //Guardar variables en la Tabla de Símbolos
+        List<String> ids = (List<String>) idenLis.evaluar();
+        TokenType tipoDato = (TokenType) type.evaluar();
+
+        for(String id : ids){
+            symbolTable.declarar(id, tipoDato.toString());
+        }
     return new NodoDeclaration(idenLis, type);
     }
-    
-    //(6)identifier_list → identifier , identifier_list | identifier
-    public Nodo parseIdentLis(){
+
+    // (6) identifier_list → identifier , identifier_list | identifier
+    public Nodo parseIdentLis() {
         String identifier = current.lexema;
         match(TokenType.ID);
-        
+
+        Nodo restoLista = null;
+
         if(current.atributo == TokenType.COMMA){
             match(TokenType.COMMA);
-            Nodo idenLis = parseIdentLis();
-            
-            while(idenLis != null){
-            /*Igual que en la regla 4, mientras se siga encontrando un identificador
-            volver a evaluarlo con parseIdentLis() y guardarlo
-            */
-            return new NodoIdenList(idenLis);
-            }
+
+            restoLista = parseIdentLis();
         }
-        return new NodoIdentifier(identifier);
+
+        //devolver un IdenList, aunque solo exista un identificador
+        return new NodoIdenList(
+            new NodoIdentifier(identifier),
+            restoLista
+        );
     }
-    
-    //(7)type → INTEGER | REAL | BOOLEAN
-    public Nodo parseType(){
-        /*
-        Algo debe de encargarse de unir el idendifier con su tipo
-        */
+
+
+    // (7) type → INTEGER | REAL | BOOLEAN
+    public Nodo parseType() {
         TokenType revType = current.atributo;
-        switch(revType){
-            case TokenType.INTEGER: match(TokenType.INTEGER); return new NodoType(revType);
-            case TokenType.REAL: match(TokenType.REAL); return new NodoType(revType);
-            case TokenType.BOOLEAN: match(TokenType.BOOLEAN); return new NodoType(revType);
-            default: throw new RuntimeException("ERROR falta declarar el tipo de la variable");
+        
+        switch(revType) {
+            case TokenType.INTEGER: match(TokenType.INTEGER);   return new NodoType(revType);
+            case TokenType.REAL:    match(TokenType.REAL);      return new NodoType(revType);
+            case TokenType.BOOLEAN: match(TokenType.BOOLEAN);   return new NodoType(revType);
+            default: throw new RuntimeException("ERROR tipo de dato no válido '" + current.lexema + "'");
         }
     }
-    
-    //(8)statement_part → BEGIN statement_list END
-    public Nodo parseStamentPart(){
+
+    // (8) statement_part → BEGIN statement_list END
+    public Nodo parseStamentPart() {
         match(TokenType.BEGIN);
         
         Nodo sl = parseStamentList();
@@ -132,292 +138,233 @@ public class Parser {
         match(TokenType.END);
         return new NodoStamentPart(sl);
     }
-    
-    //(9)statement_list → statement ; statement_list  | statement
-    public Nodo parseStamentList(){
+
+    // (9) statement_list → statement ; statement_list | statement
+    public Nodo parseStamentList() {
         Nodo stmt = parseStatement();
-        
-        if(current.atributo == TokenType.SEMICOLON){
+
+        if(current.atributo == TokenType.SEMICOLON) {
             match(TokenType.SEMICOLON);
             
-            Nodo sl = parseStamentList();
-            while(sl != null){
-                /*
-                    Igual necesito acomodar estos while
-                */
+            if(current.atributo == TokenType.END) {
+                return stmt;
             }
-        return new NodoStmtLis(stmt, sl);    
+            Nodo sl = parseStamentList();
+            return new NodoStmtLis(stmt, sl);
         }
-        return new NodoStatement(stmt);
+        return stmt;
     }
-    
-    //(10)statement → assignment | if_statement  | while_statement  | compound_statement | read_statement | write_statement
-    public Nodo parseStatement(){
-        switch(current.atributo){
-            case TokenType.ID: return parseAssignment();
-            case TokenType.IF: return parseIfStmt();
-            case TokenType.WHILE: return parseWhileStmt();
-            case TokenType.BEGIN: return parseCompoundStmt();
-            case TokenType.READ: return parseReadStmt();
-            case TokenType.WRITE: return parseWriteStmt();
-            default: throw new RuntimeException("ERROR algo no va donde debe o falta");
+
+    // (10) statement → assignment | if_statement | while_statement | compound_statement | read_statement | write_statement
+    public Nodo parseStatement() {
+        switch (current.atributo) {
+            case TokenType.ID:
+                if(current.lexema.equalsIgnoreCase("INPUT")) return parseReadStmt();
+                if(current.lexema.equalsIgnoreCase("PRINT")) return parseWriteStmt();
+                    return parseAssignment();
+            case TokenType.IF:      return parseIfStmt();
+            case TokenType.WHILE:   return parseWhileStmt();
+            case TokenType.BEGIN:   return parseCompoundStmt();
+            case TokenType.READ:    return parseReadStmt();
+            case TokenType.WRITE:   return parseWriteStmt();
+            default: throw new RuntimeException("ERROR sentencia no válida cerca de '" + current.lexema + "'");
         }
     }
 
-//(11)assignment → identifier := expression
-    private Nodo parseAssignment() {return null;}
-//(12)if_statement → IF expression THEN statement ELSE statement
-    private Nodo parseIfStmt() {return null;}
-//(13)while_statement → WHILE expression DO statement
-    private Nodo parseWhileStmt() { return null;}
-//(14)compound_statement → BEGIN statement_list END
-    private Nodo parseCompoundStmt() {return null;}
-//(15)read_statement → READ ( identifier_list )
-    private Nodo parseReadStmt() {return null;}
-//(16)write_statement → WRITE ( write_list )
-    private Nodo parseWriteStmt() {return null;}
-    
-    
+    // (11) assignment → identifier := expression
+    private Nodo parseAssignment() {
+        String id = current.lexema;
+        match(TokenType.ID);
 
-
-
-
-
-//NODOS PARA CREAR EL ÁRBOL, respete el evaluar() para no confundirme, pero se le puede cambiar el nombre
-abstract class Nodo{
-    /*NOTA: Como lo modificamos a object es necesario especificar que es lo que se devuelve cada que se 
-         tiene que devolver, pero no se que tan útil sea eso o si nos va a dar muchos problemas
-    */
-    public abstract Object evaluar();
-}
-
-//Nodo raíz o lo principal (Regla 1)
-class NodoPrograma extends Nodo{
-    private String nombre;
-    private Nodo bloque;
-    
-    public NodoPrograma(String nombre, Nodo bloque){
-        this.nombre = nombre;
-        this.bloque = bloque;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return bloque.evaluar();
-    }
-}
-
-//Regla 2
-class NodoBlock extends Nodo{
-    private Nodo declaración;
-    private Nodo stament;
-    
-    public NodoBlock(Nodo declaración, Nodo stament){
-        this.declaración = declaración;
-        this.stament = stament;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return declaración.evaluar();
-    }
-}
-
-//Regla 3
-class NodoDeclPart extends Nodo{
-    private Nodo listaVariables;
-    
-    public NodoDeclPart(Nodo listaVariables){
-        this.listaVariables = listaVariables;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return listaVariables.evaluar();
-    }
-}
-
-//Regla 4
-class NodoDeclList extends Nodo{
-    private Nodo declL;
-    private Nodo dL;
-    
-    public NodoDeclList(Nodo declL, Nodo dL){
-        this.declL = declL;
-        this.dL = dL;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return declL.evaluar();
-    }
-}
-
-//Regla 5
-class NodoDeclaration extends Nodo{
-    private Nodo identLis;
-    private Nodo type;
-    
-    public NodoDeclaration(Nodo identLis, Nodo type){
-        this.identLis = identLis;
-        this.type = type;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return identLis.evaluar();
-    }
-}
-
-//Regla 6
-class NodoIdenList extends Nodo{
-    private Nodo idenList;
-    
-    public NodoIdenList(Nodo idenList){
-        this.idenList = idenList;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return idenList.evaluar();
-    }
-}
-
-//Es el identifier de la regla 6, solo necesitamos guardar el nombre del idetificador
-class NodoIdentifier extends Nodo{
-    String lexema;
-    
-    public NodoIdentifier(String lexema){
-        this.lexema = lexema;
-    }
-    
-    public Object evaluar(){
-        //Aquí no recuerdo porque regresa 0
-        return 0;
-    }
-}
-
-//Regla 7
-class NodoType extends Nodo{
-    TokenType type;
-    
-    public NodoType(TokenType type){
-        this.type = type;
-    }
-    
-    public Object evaluar(){
-    //Repeti el 0 de identifier porque segun mi lógica no se evalua, solo se guarda el typo que define el usuario (programa.pas)
-        return 0;
-    }
-}
-
-//Regla 8
-class NodoStamentPart extends Nodo{
-    private Nodo sl;
-    
-    public NodoStamentPart(Nodo sl){
-        this.sl = sl;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return sl.evaluar();
-    }
-}
-
-//Regla 9
-class NodoStmtLis extends Nodo{
-    private Nodo stmt;
-    private Nodo sl;
-    
-    public NodoStmtLis(Nodo stmt, Nodo sl){
-        this.sl = sl;
-        this.stmt = stmt;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return stmt.evaluar();
-    }
-}
-
-//Parte de la 10, no se si realmente se ocupen tantos nodos (osea si pero no)
-class NodoStatement extends Nodo{
-    private Nodo stmt;
-    
-    public NodoStatement(Nodo stmt){
-        this.stmt = stmt;
-    }
-    
-    @Override
-    public Object evaluar(){
-        return stmt.evaluar();
-    }
-}
-
-
-//Coservamos NodoNumérico porque seguimos utilizando numeros para los cálculos
-class NodoNumérico extends Nodo{
-    private float valor;
-    
-    public NodoNumérico(float valor){
-        this.valor = valor;
-    }
-    
-    @Override
-    public Object evaluar(){
-        //Regresamos este valor que ya trae el tipo
-        return this.valor;
-    }
-}
-
-//Al nodo operador solo le agregamos los nuevos operadores que están en la gramática
-class NodoOperador extends Nodo{
-    private String operador;    
-    private Nodo izq, der;
-    
-    public NodoOperador(String operador, Nodo izq, Nodo der){
-        this.operador = operador;
-        this.izq = izq;
-        this.der = der;
-    }
-    
-    @Override
-    public Object evaluar(){
-        switch(this.operador){
-            case "+"    :  return (float)  this.izq.evaluar()  +   (float)  this.der.evaluar();
-            case "-"    :  return (float)  this.izq.evaluar()  -   (float)  this.der.evaluar();
-            case "*"    :  return (float)  this.izq.evaluar()  *   (float)  this.der.evaluar();
-            case "/"    :  return (float)  this.izq.evaluar()  /   (float)  this.der.evaluar();
-            case "OR"   :  return (boolean)this.izq.evaluar()  ||  (boolean)this.der.evaluar();
-            case "AND"  :  return (boolean)this.izq.evaluar()  &&  (boolean)this.der.evaluar();
-            case "="    :  return          this.izq.evaluar()  ==           this.der.evaluar();
-            case "<>"   :  return          this.izq.evaluar()  !=           this.der.evaluar();
-            case "<"    :  return (float)  this.izq.evaluar()  <   (float)  this.der.evaluar();
-            case "<="   :  return (float)  this.izq.evaluar()  <=  (float)  this.der.evaluar();
-            case ">"    :  return (float)  this.izq.evaluar()  >   (float)  this.der.evaluar();
-            case ">="   :  return (float)  this.izq.evaluar()  >=  (float)  this.der.evaluar();
-            default     :  throw new RuntimeException("Operador ilegal...");    
+        if(!symbolTable.contains(id)) {
+            throw new RuntimeException("ERROR la variable '" + id + "' no ha sido declarada.");
         }
-    }      
-}
 
-
-
-//Seguimos asignando
-class NodoAsignación extends Nodo{
-    String id;
-    char op;
-    Nodo der;
-    
-    public NodoAsignación(char op, String id, Nodo der){
-        this.op = op;
-        this.id = id;
-        this.der = der;
+        match(TokenType.ASSIGN);
+        
+        Nodo expr = parseExpression();
+        return new NodoAsignación('=', id, expr);
     }
-    public Object evaluar(){
-        return der.evaluar();
-    }
-}
 
+    // (12) if_statement → IF expression THEN statement ELSE statement
+    private Nodo parseIfStmt() {
+        match(TokenType.IF);
+        
+        Nodo condicion = parseExpression();
+        
+        match(TokenType.THEN);
+        
+        Nodo entoncesStmt = parseStatement();
+
+        Nodo sinoStmt = null;
+        
+        if(current.atributo == TokenType.ELSE) {
+            match(TokenType.ELSE);
+            sinoStmt = parseStatement();
+        }
+        return new NodoIf(condicion, entoncesStmt, sinoStmt);
+    }
+
+    // (13) while_statement → WHILE expression DO statement
+    private Nodo parseWhileStmt() {
+        match(TokenType.WHILE);
+        
+        Nodo condicion = parseExpression();
+        
+        match(TokenType.DO);
+        
+        Nodo cuerpo = parseStatement();
+        return new NodoWhile(condicion, cuerpo);
+    }
+
+    // (14) compound_statement → BEGIN statement_list END
+    private Nodo parseCompoundStmt() {
+        return parseStamentPart();
+    }
+
+    // (15) read_statement → (READ | INPUT) ( identifier_list )
+    private Nodo parseReadStmt() {
+        if(current.atributo == TokenType.READ || current.lexema.equalsIgnoreCase("INPUT")){
+            current = lexer.nexToken();
+        }else {
+            throw new RuntimeException("ERROR se esperaba READ o INPUT.");
+        }
+
+        match(TokenType.LPARENT);
+        Nodo idsNodo = parseIdentLis();
+
+        List<String> ids = (List<String>) idsNodo.evaluar();
+        for(String varName : ids) {
+            if(!symbolTable.contains(varName)){
+                throw new RuntimeException("ERROR la variable '" + varName + "' en READ/INPUT no está declarada.");
+            }
+        }
+
+        match(TokenType.RPARENT);
+        return new NodoRead(idsNodo);
+    }
+
+    // (16) write_statement → (WRITE | PRINT) ( write_list )
+    private Nodo parseWriteStmt() {
+        if(current.atributo == TokenType.WRITE || current.lexema.equalsIgnoreCase("PRINT")){
+            current = lexer.nexToken();
+        }else {
+            throw new RuntimeException("ERROR se esperaba WRITE o PRINT.");
+        }
+
+        match(TokenType.LPARENT);
+        
+        Nodo listNodo = parseWriteList();
+        
+        match(TokenType.RPARENT);
+        return new NodoWrite(listNodo);
+    }
+
+    // (17) write_list → write_item , write_list | write_item
+    private Nodo parseWriteList() {
+        Nodo item = parseWriteItem();
+        if(current.atributo == TokenType.COMMA){
+            match(TokenType.COMMA);
+            
+            Nodo resto = parseWriteList();
+            return new NodoWriteList(item, resto);
+        }
+        return item;
+    }
+
+    // (18) write_item → expression | string_literal
+    private Nodo parseWriteItem() {
+        if(current.atributo == TokenType.STRING_LITERAL){
+            String texto = current.lexema;
+            match(TokenType.STRING_LITERAL);
+            
+            return new NodoTexto(texto);
+        }
+        return parseExpression();
+    }
+
+    // (19) expression → simple_expression relop simple_expression | simple_expression
+    private Nodo parseExpression() {
+        Nodo izq = parseSimpleExpression();
+
+        if(isRelop(current.atributo)){
+            String op = current.lexema;
+            match(current.atributo);
+            
+            Nodo der = parseSimpleExpression();
+            return new NodoOperador(op, izq, der);
+        }
+        return izq;
+    }
+
+    private boolean isRelop(TokenType type) {
+        return type == TokenType.EQUAL   || type == TokenType.NOT_EQUAL     ||
+               type == TokenType.LESS    || type == TokenType.LESS_OR_EQUAL ||
+               type == TokenType.GREATER || type == TokenType.GREATER_OR_EQUAL;
+    }
+
+    // (20) simple_expression → term addop term | term
+    private Nodo parseSimpleExpression() {
+        Nodo izq = parseTerm();
+
+        while(current.atributo == TokenType.SUM || current.atributo == TokenType.SUB || current.atributo == TokenType.OR){
+            String op = current.lexema;
+            match(current.atributo);
+            
+            Nodo der = parseTerm();
+            
+            izq = new NodoOperador(op, izq, der);
+        }
+        return izq;
+    }
+
+    // (21) term → factor mulop factor | factor
+    private Nodo parseTerm() {
+        Nodo izq = parseFactor();
+
+        while(current.atributo == TokenType.MUL || current.atributo == TokenType.DIV || current.atributo == TokenType.AND){
+            String op = current.lexema;
+            match(current.atributo);
+            
+            Nodo der = parseFactor();
+            
+            izq = new NodoOperador(op, izq, der);
+        }
+        return izq;
+    }
+
+    // (22) factor → identifier | number | ( expression )
+    private Nodo parseFactor() {
+        if(current.atributo == TokenType.ID){
+            String name = current.lexema;
+
+            if(!symbolTable.contains(name)){
+                throw new RuntimeException("ERROR la variable '" + name + "' no esta declarada.");
+            }
+
+            match(TokenType.ID);
+            return new NodoIdentifier(name);
+            
+        }else if(current.atributo == TokenType.INT_LITERAL || current.atributo == TokenType.FLOAT_LITERAL) {
+            float val = Float.parseFloat(current.lexema);
+            match(current.atributo);
+            
+            return new NodoNumérico(val);
+            
+        }else if(current.atributo == TokenType.LPARENT){
+            match(TokenType.LPARENT);
+            
+            Nodo expr = parseExpression();
+            
+            match(TokenType.RPARENT);
+            return expr;
+            
+        }else{
+            throw new RuntimeException("ERROR se esperaba un identificador, número o '(' y se encontró '" + current.lexema + "'");
+        }
+    }
+
+    public SymbolTable getSymbolTable() {
+        return symbolTable;
+    }
 }

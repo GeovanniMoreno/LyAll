@@ -218,27 +218,27 @@ enum TokenType{
 }
 
 
-class TestLexer{
-    public static void main(String[] args) {
-        Lexer demo = new Lexer("""
-                               PROGRAM VolumenDeUnaEsfera;
-                               VAR
-                                   radio, volumen : REAL;
-                               BEGIN
-                                   WRITE("Introduce un valor para el radio: ");
-                                   READ(radio);
-                                   
-                                   volumen := 3/4 * 3.1415964 * radio*radio*radio;
-                               
-                                   WRITE("El valor del volumen es: ", volumen);
-                               END.""");
-       
-        while(true){
-            Token t = demo.nexToken();
-            if(t.atributo == TokenType.EOF)
-                break;
-            System.out.println(t.atributo + ", " + t.lexema);                
-        }
-    }
-}
+//class TestLexer{
+//    public static void main(String[] args) {
+//        Lexer demo = new Lexer("""
+//                               PROGRAM VolumenDeUnaEsfera;
+//                               VAR
+//                                   radio, volumen : REAL;
+//                               BEGIN
+//                                   WRITE("Introduce un valor para el radio: ");
+//                                   READ(radio);
+//                                   
+//                                   volumen := 3/4 * 3.1415964 * radio*radio*radio;
+//                               
+//                                   WRITE("El valor del volumen es: ", volumen);
+//                               END.""");
+//       
+//        while(true){
+//            Token t = demo.nexToken();
+//            if(t.atributo == TokenType.EOF)
+//                break;
+//            System.out.println(t.atributo + ", " + t.lexema);                
+//        }
+//    }
+//}
 
