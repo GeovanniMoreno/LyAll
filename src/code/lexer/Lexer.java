@@ -138,11 +138,12 @@ public class Lexer {
             case "INTEGER": return new Token(id, TokenType.INTEGER);
             case "REAL"   : return new Token(id, TokenType.REAL);
             case "BOOLEAN": return new Token(id, TokenType.BOOLEAN);
-            case "READ"   : return new Token(id,TokenType.READ);
+            case "READ"   : return new Token(id, TokenType.READ);
             case "WRITE"  : return new Token(id, TokenType.WRITE);
-            case "OR"     : return new Token(id,TokenType.OR);
-            case "AND"    : return new Token(id,TokenType.AND);
-        
+            case "OR"     : return new Token(id, TokenType.OR);
+            case "AND"    : return new Token(id, TokenType.AND);
+            case "TRUE"   :
+            case "FALSE"  : return new Token(id, TokenType.BOOLEAN_LITERAL);
         }
         return new Token(id, TokenType.ID);
     }
@@ -164,33 +165,3 @@ public class Lexer {
             throw new RuntimeException("String no cerrado");
     }
 }
-
-
-
-
-
-
-//class TestLexer{
-//    public static void main(String[] args) {
-//        Lexer demo = new Lexer("""
-//                               PROGRAM VolumenDeUnaEsfera;
-//                               VAR
-//                                   radio, volumen : REAL;
-//                               BEGIN
-//                                   WRITE("Introduce un valor para el radio: ");
-//                                   READ(radio);
-//                                   
-//                                   volumen := 3/4 * 3.1415964 * radio*radio*radio;
-//                               
-//                                   WRITE("El valor del volumen es: ", volumen);
-//                               END.""");
-//       
-//        while(true){
-//            Token t = demo.nexToken();
-//            if(t.atributo == TokenType.EOF)
-//                break;
-//            System.out.println(t.atributo + ", " + t.lexema);                
-//        }
-//    }
-//}
-

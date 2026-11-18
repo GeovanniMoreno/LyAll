@@ -1,15 +1,14 @@
 package semantic;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Symbol {
-    private String name;
-    private String tokenType;
+    private final String name;
+    private final String tokenType;
+    private Object value;
 
     public Symbol(String name, String tokenType) {
         this.name = name;
         this.tokenType = tokenType;
+        this.value = null;
     }
 
     public String getName() {
@@ -20,8 +19,16 @@ public class Symbol {
         return tokenType;
     }
 
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
-        return "Symbol {name=" + name + ", tokenType=" + tokenType + "}";
+        return "Symbol {name=" + name + ", tokenType=" + tokenType + ", value=" + value + "}";
     }
 }
