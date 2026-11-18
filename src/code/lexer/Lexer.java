@@ -1,21 +1,21 @@
-package ConPascal;
+package lexer;
 
 import java.util.function.Predicate;
 
 public class Lexer {
     final String recibePrograma;
-    int posición;
+    int posicion;
     char caracterActual;
     
     public Lexer(String recibePrograma){
         this.recibePrograma = recibePrograma;
-        this.posición = 0;
+        this.posicion = 0;
         caracterActual = (recibePrograma.length() > 0)? recibePrograma.charAt(0) : '\0';
     }
     
     private void advance(){
-        this.posición++;
-        caracterActual = (posición < recibePrograma.length())? recibePrograma.charAt(posición) : '\0';
+        this.posicion++;
+        caracterActual = (posicion < recibePrograma.length())? recibePrograma.charAt(posicion) : '\0';
     }
     
     private void skipSpace(){
@@ -50,7 +50,7 @@ public class Lexer {
                 case ':': return assig(); 
                 case '<': return relop();
                 case '>': return relop2();
-                default : throw new RuntimeException("Carácter ilegal [" + caracterActual + "]"); 
+                default : throw new RuntimeException("Caracter ilegal [" + caracterActual + "]"); 
             }
         }
         return new Token("", TokenType.EOF);
@@ -62,7 +62,7 @@ public class Lexer {
             advance(); 
             return new Token(":=", TokenType.ASSIGN);
         }
-        //Aquí no se porque agregas dos puntos que no están en la gramática
+        //Aquí no se porque agregas dos puntos que no estan en la gramatica
         return new Token(":", TokenType.COLON);
     }
     
@@ -87,9 +87,9 @@ public class Lexer {
         return new Token(">", TokenType.GREATER);
     }
     
-    private String readWhile(Predicate<Character> condición){
+    private String readWhile(Predicate<Character> condicion){
         StringBuilder sb = new StringBuilder();
-        while(caracterActual != '\0' && condición.test(caracterActual)){
+        while(caracterActual != '\0' && condicion.test(caracterActual)){
             sb.append(caracterActual);
             advance();
         }
@@ -104,8 +104,8 @@ public class Lexer {
             advance();
         }        
         
-        if (caracterActual == '.' && posición + 1 < recibePrograma.length() 
-                && Character.isDigit(recibePrograma.charAt(posición + 1))) {
+        if (caracterActual == '.' && posicion + 1 < recibePrograma.length() 
+                && Character.isDigit(recibePrograma.charAt(posicion + 1))) {
             sb.append(caracterActual);
             advance();            
             while (caracterActual != '\0' && Character.isDigit(caracterActual)) {
@@ -117,7 +117,7 @@ public class Lexer {
         return new Token(sb.toString(), TokenType.INT_LITERAL);
     }
     
-//Sirve para determinar qué caracteres componen un identificador válido o palabra reservada tras 
+//Sirve para determinar que caracteres componen un identificador valido o palabra reservada tras 
 //leer la primera letra. Permite identificar nombres como radio1, volumen_total o radio_2.
     private Predicate<Character> isValidChar() {
         return c -> Character.isLetterOrDigit(c) || c == '_';
@@ -165,57 +165,9 @@ public class Lexer {
     }
 }
 
-class Token{
-    String lexema;
-    TokenType atributo;
-    
-    public Token(String lexema, TokenType atributo){
-        this.lexema = lexema;
-        this.atributo = atributo;
-    }
-}
 
-enum TokenType{
-    SUM,
-    SUB,
-    MUL,
-    DIV,
-    EQUAL,
-    ASSIGN,
-    NOT_EQUAL,
-    LESS,
-    LESS_OR_EQUAL,
-    GREATER,
-    GREATER_OR_EQUAL,
-    LPARENT,
-    RPARENT,
-    SEMICOLON,
-    COLON,
-    COMMA,
-    DOT,
-    PROGRAM,
-    VAR,
-    BEGIN,
-    END,
-    IF,
-    THEN,
-    ELSE,
-    WHILE,
-    DO,
-    INTEGER,
-    REAL,
-    BOOLEAN,
-    ID,
-    OR,
-    AND,
-    INT_LITERAL,
-    FLOAT_LITERAL,
-    BOOLEAN_LITERAL,
-    STRING_LITERAL,
-    READ,
-    WRITE,
-    EOF
-}
+
+
 
 
 //class TestLexer{

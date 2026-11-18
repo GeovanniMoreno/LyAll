@@ -1,9 +1,17 @@
-package ConPascal;
+package parser;
 
 import java.util.List;
 
+import lexer.Lexer;
+import lexer.Token;
+import lexer.TokenType;
+import semantic.SymbolTable;
+import ast.*;
+
+
+
 /**
- * Analizador Sintáctico y Semántico para Pascal (Reglas 1 a 25).
+ * Analizador Sintactico y Semantico para Pascal (Reglas 1 a 25).
  */
 public class Parser {
     private Lexer lexer;
@@ -17,10 +25,10 @@ public class Parser {
     }
 
     private void match(TokenType type) {
-        if(current.atributo == type) {
+        if(current.getAtributo() == type) {
             current = lexer.nexToken();
         }else {
-            throw new RuntimeException("ERROR esperabamos: " + type + "y tenemos: " + current.lexema);
+            throw new RuntimeException("ERROR esperabamos: " + type + "y tenemos: " + current.getLexema());
         }
     }
 
@@ -32,7 +40,7 @@ public class Parser {
     public Nodo parseProgram() {
         match(TokenType.PROGRAM);
         
-        String nombrePrgm = current.lexema;
+        String nombrePrgm = current.getLexema();
         match(TokenType.ID);
         
         match(TokenType.SEMICOLON);
@@ -52,7 +60,7 @@ public class Parser {
 
     // (3) declaration_part → VAR declaration_list | ε
     public Nodo parseDeclPart() {
-        if(current.atributo == TokenType.VAR) {
+        if(current.getAtributo() == TokenType.VAR) {
             match(TokenType.VAR);
             
             return parseDeclList();
@@ -65,10 +73,10 @@ public class Parser {
     public Nodo parseDeclList() {
         Nodo decl = parseDeclaration();
 
-        if(current.atributo == TokenType.SEMICOLON) {
+        if(current.getAtributo() == TokenType.SEMICOLON) {
             match(TokenType.SEMICOLON);
             
-            if(current.atributo != TokenType.ID) {
+            if(current.getAtributo() != TokenType.ID) {
                 return decl;
             }
             
@@ -98,12 +106,12 @@ public class Parser {
 
     // (6) identifier_list → identifier , identifier_list | identifier
     public Nodo parseIdentLis() {
-        String identifier = current.lexema;
+        String identifier = current.getLexema();
         match(TokenType.ID);
 
         Nodo restoLista = null;
 
-        if(current.atributo == TokenType.COMMA){
+        if(current.getAtributo() == TokenType.COMMA){
             match(TokenType.COMMA);
 
             restoLista = parseIdentLis();
@@ -119,13 +127,13 @@ public class Parser {
 
     // (7) type → INTEGER | REAL | BOOLEAN
     public Nodo parseType() {
-        TokenType revType = current.atributo;
+        TokenType revType = current.getAtributo();
         
         switch(revType) {
             case TokenType.INTEGER: match(TokenType.INTEGER);   return new NodoType(revType);
             case TokenType.REAL:    match(TokenType.REAL);      return new NodoType(revType);
             case TokenType.BOOLEAN: match(TokenType.BOOLEAN);   return new NodoType(revType);
-            default: throw new RuntimeException("ERROR tipo de dato no válido '" + current.lexema + "'");
+            default: throw new RuntimeException("ERROR tipo de dato no valido '" + current.getLexema() + "'");
         }
     }
 
@@ -143,10 +151,10 @@ public class Parser {
     public Nodo parseStamentList() {
         Nodo stmt = parseStatement();
 
-        if(current.atributo == TokenType.SEMICOLON) {
+        if(current.getAtributo() == TokenType.SEMICOLON) {
             match(TokenType.SEMICOLON);
             
-            if(current.atributo == TokenType.END) {
+            if(current.getAtributo() == TokenType.END) {
                 return stmt;
             }
             Nodo sl = parseStamentList();
@@ -157,23 +165,23 @@ public class Parser {
 
     // (10) statement → assignment | if_statement | while_statement | compound_statement | read_statement | write_statement
     public Nodo parseStatement() {
-        switch (current.atributo) {
+        switch (current.getAtributo()) {
             case TokenType.ID:
-                if(current.lexema.equalsIgnoreCase("INPUT")) return parseReadStmt();
-                if(current.lexema.equalsIgnoreCase("PRINT")) return parseWriteStmt();
+                if(current.getLexema().equalsIgnoreCase("INPUT")) return parseReadStmt();
+                if(current.getLexema().equalsIgnoreCase("PRINT")) return parseWriteStmt();
                     return parseAssignment();
             case TokenType.IF:      return parseIfStmt();
             case TokenType.WHILE:   return parseWhileStmt();
             case TokenType.BEGIN:   return parseCompoundStmt();
             case TokenType.READ:    return parseReadStmt();
             case TokenType.WRITE:   return parseWriteStmt();
-            default: throw new RuntimeException("ERROR sentencia no válida cerca de '" + current.lexema + "'");
+            default: throw new RuntimeException("ERROR sentencia no valida cerca de '" + current.getLexema() + "'");
         }
     }
 
     // (11) assignment → identifier := expression
     private Nodo parseAssignment() {
-        String id = current.lexema;
+        String id = current.getLexema();
         match(TokenType.ID);
 
         if(!symbolTable.contains(id)) {
@@ -183,7 +191,7 @@ public class Parser {
         match(TokenType.ASSIGN);
         
         Nodo expr = parseExpression();
-        return new NodoAsignación('=', id, expr);
+        return new NodoAsignacion('=', id, expr);
     }
 
     // (12) if_statement → IF expression THEN statement ELSE statement
@@ -198,7 +206,7 @@ public class Parser {
 
         Nodo sinoStmt = null;
         
-        if(current.atributo == TokenType.ELSE) {
+        if(current.getAtributo() == TokenType.ELSE) {
             match(TokenType.ELSE);
             sinoStmt = parseStatement();
         }
@@ -224,7 +232,7 @@ public class Parser {
 
     // (15) read_statement → (READ | INPUT) ( identifier_list )
     private Nodo parseReadStmt() {
-        if(current.atributo == TokenType.READ || current.lexema.equalsIgnoreCase("INPUT")){
+        if(current.getAtributo() == TokenType.READ || current.getLexema().equalsIgnoreCase("INPUT")){
             current = lexer.nexToken();
         }else {
             throw new RuntimeException("ERROR se esperaba READ o INPUT.");
@@ -236,7 +244,7 @@ public class Parser {
         List<String> ids = (List<String>) idsNodo.evaluar();
         for(String varName : ids) {
             if(!symbolTable.contains(varName)){
-                throw new RuntimeException("ERROR la variable '" + varName + "' en READ/INPUT no está declarada.");
+                throw new RuntimeException("ERROR la variable '" + varName + "' en READ/INPUT no esta declarada.");
             }
         }
 
@@ -246,7 +254,7 @@ public class Parser {
 
     // (16) write_statement → (WRITE | PRINT) ( write_list )
     private Nodo parseWriteStmt() {
-        if(current.atributo == TokenType.WRITE || current.lexema.equalsIgnoreCase("PRINT")){
+        if(current.getAtributo() == TokenType.WRITE || current.getLexema().equalsIgnoreCase("PRINT")){
             current = lexer.nexToken();
         }else {
             throw new RuntimeException("ERROR se esperaba WRITE o PRINT.");
@@ -263,7 +271,7 @@ public class Parser {
     // (17) write_list → write_item , write_list | write_item
     private Nodo parseWriteList() {
         Nodo item = parseWriteItem();
-        if(current.atributo == TokenType.COMMA){
+        if(current.getAtributo() == TokenType.COMMA){
             match(TokenType.COMMA);
             
             Nodo resto = parseWriteList();
@@ -274,8 +282,8 @@ public class Parser {
 
     // (18) write_item → expression | string_literal
     private Nodo parseWriteItem() {
-        if(current.atributo == TokenType.STRING_LITERAL){
-            String texto = current.lexema;
+        if(current.getAtributo() == TokenType.STRING_LITERAL){
+            String texto = current.getLexema();
             match(TokenType.STRING_LITERAL);
             
             return new NodoTexto(texto);
@@ -287,9 +295,9 @@ public class Parser {
     private Nodo parseExpression() {
         Nodo izq = parseSimpleExpression();
 
-        if(isRelop(current.atributo)){
-            String op = current.lexema;
-            match(current.atributo);
+        if(isRelop(current.getAtributo())){
+            String op = current.getLexema();
+            match(current.getAtributo());
             
             Nodo der = parseSimpleExpression();
             return new NodoOperador(op, izq, der);
@@ -307,9 +315,9 @@ public class Parser {
     private Nodo parseSimpleExpression() {
         Nodo izq = parseTerm();
 
-        while(current.atributo == TokenType.SUM || current.atributo == TokenType.SUB || current.atributo == TokenType.OR){
-            String op = current.lexema;
-            match(current.atributo);
+        while(current.getAtributo() == TokenType.SUM || current.getAtributo() == TokenType.SUB || current.getAtributo() == TokenType.OR){
+            String op = current.getLexema();
+            match(current.getAtributo());
             
             Nodo der = parseTerm();
             
@@ -322,9 +330,9 @@ public class Parser {
     private Nodo parseTerm() {
         Nodo izq = parseFactor();
 
-        while(current.atributo == TokenType.MUL || current.atributo == TokenType.DIV || current.atributo == TokenType.AND){
-            String op = current.lexema;
-            match(current.atributo);
+        while(current.getAtributo() == TokenType.MUL || current.getAtributo() == TokenType.DIV || current.getAtributo() == TokenType.AND){
+            String op = current.getLexema();
+            match(current.getAtributo());
             
             Nodo der = parseFactor();
             
@@ -335,8 +343,8 @@ public class Parser {
 
     // (22) factor → identifier | number | ( expression )
     private Nodo parseFactor() {
-        if(current.atributo == TokenType.ID){
-            String name = current.lexema;
+        if(current.getAtributo() == TokenType.ID){
+            String name = current.getLexema();
 
             if(!symbolTable.contains(name)){
                 throw new RuntimeException("ERROR la variable '" + name + "' no esta declarada.");
@@ -345,13 +353,13 @@ public class Parser {
             match(TokenType.ID);
             return new NodoIdentifier(name);
             
-        }else if(current.atributo == TokenType.INT_LITERAL || current.atributo == TokenType.FLOAT_LITERAL) {
-            float val = Float.parseFloat(current.lexema);
-            match(current.atributo);
+        }else if(current.getAtributo() == TokenType.INT_LITERAL || current.getAtributo() == TokenType.FLOAT_LITERAL) {
+            float val = Float.parseFloat(current.getLexema());
+            match(current.getAtributo());
             
-            return new NodoNumérico(val);
+            return new NodoNumerico(val);
             
-        }else if(current.atributo == TokenType.LPARENT){
+        }else if(current.getAtributo() == TokenType.LPARENT){
             match(TokenType.LPARENT);
             
             Nodo expr = parseExpression();
@@ -360,7 +368,7 @@ public class Parser {
             return expr;
             
         }else{
-            throw new RuntimeException("ERROR se esperaba un identificador, número o '(' y se encontró '" + current.lexema + "'");
+            throw new RuntimeException("ERROR se esperaba un identificador, número o '(' y se encontro '" + current.getLexema() + "'");
         }
     }
 
