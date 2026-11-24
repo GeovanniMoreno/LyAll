@@ -92,3 +92,9 @@ Pero bueno eso ya despues jejej
 Ahi te mando gio un archivo .txt con todos los codigos .java metidos, ya para q nomas se lo den a la IA y puedan revisar o pedirle cosas.
 
 Ay nos vemos los tkm
+
+## Actualización 24 de noviembre
+## Se agrego la carpeta codegen en la cual se encuentra Cuadruplos donde se maneja mediante el uso de la estructura de record para mantener en uso la misma estructura de los anteriorees codigos##
+## En GeneradorCuadruplo es como funcionara el codigo para poder aumemtar los temporales y como es que los genera
+
+## Falta implementar el codigo que genera el ASM osea el ensamblador que creo que ira para x86
