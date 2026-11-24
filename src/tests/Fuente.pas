@@ -1,15 +1,9 @@
-PROGRAM VolumenDeUnaEsfera;
+PROGRAM Prueba;
 VAR
-    radio, volumen :REAL;
-    aceptado :BOOLEAN;
+    a, b: INTEGER;
 BEGIN
-    WRITE("Introduce un valor para el radio: ");
-    READ(radio);
-    aceptado := radio >= 0;
-    IF aceptado THEN 
-        BEGIN
-            volumen := 3/4 * 3.1415964 * radio*radio*radio;
-            WRITE("El valor del volumen es: ", volumen);
-        END;
+    IF a > b THEN
+        a := 10
+    ELSE
+        a := 20;
 END.
-

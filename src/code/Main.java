@@ -1,5 +1,8 @@
 import ast.Evaluador;
 import ast.Sentencia.Programa;
+import codegen.Cuadruplo;
+import codegen.GeneradorCuadruplos;
+import java.util.List;
 import lexer.Lexer;
 import lexer.Loader;
 import parser.Parser;
@@ -24,7 +27,15 @@ public class Main {
             semantico.analizar(arbolAST);
             System.out.println("Analisis semantico completado CON EXITO.");
 
-            // 3. Ejecucion (Interprete)
+            // 3. Generacion de codigo intermedio
+            System.out.println("\n--- GENERANDO CUADRUPLOS ---");
+            GeneradorCuadruplos generador = new GeneradorCuadruplos();
+            List<Cuadruplo> cuadruplos = generador.generar(arbolAST);
+                for (Cuadruplo c : cuadruplos) {
+                    System.out.println(c);
+                }
+                
+            // 4. Ejecucion (Interprete)
             System.out.println("\n--- EJECUTANDO PROGRAMA ---");
             Evaluador evaluador = new Evaluador(parser.getSymbolTable());
             evaluador.ejecutar(arbolAST);
