@@ -94,7 +94,10 @@ Ahi te mando gio un archivo .txt con todos los codigos .java metidos, ya para q 
 Ay nos vemos los tkm
 
 ## Actualización 24 de noviembre
-## Se agrego la carpeta codegen en la cual se encuentra Cuadruplos donde se maneja mediante el uso de la estructura de record para mantener en uso la misma estructura de los anteriorees codigos##
-## En GeneradorCuadruplo es como funcionara el codigo para poder aumemtar los temporales y como es que los genera
+- Se agrego la carpeta codegen en la cual se encuentra Cuadruplos donde se maneja mediante el uso de la estructura de record para mantener en uso la misma estructura de los anteriorees codigos
+- En GeneradorCuadruplo es como funcionara el codigo para poder aumemtar los temporales y como es que los genera
+- Falta implementar el codigo que genera el ASM osea el ensamblador que creo que ira para x86
 
-## Falta implementar el codigo que genera el ASM osea el ensamblador que creo que ira para x86
+## Generador de ASM colocado
+- No se agrego lo del read y write porque era muchisimos lineas de codigo en pura impresion de las 300 se mandaba a 700-800 lineas de pura impresion
+- Faltaria hacer mas archivos de prueba porque el que se llama Fuente.pas me dio algun error en la parte de declaracion de variables

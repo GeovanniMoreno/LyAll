@@ -1,6 +1,7 @@
 import ast.Evaluador;
 import ast.Sentencia.Programa;
 import codegen.Cuadruplo;
+import codegen.GeneradorASM;
 import codegen.GeneradorCuadruplos;
 import java.util.List;
 import lexer.Lexer;
@@ -11,11 +12,12 @@ import semantic.AnalizadorSemantico;
 public class Main {
     public static void main(String[] args) {
         System.out.println("Leyendo codigo fuente...\n");
-        String codigoFuente = Loader.read("src/tests/Fuente.pas");
+        String codigoFuente = Loader.read("src/tests/Cuadruplos.pas");
         System.out.println(codigoFuente);
 
         Lexer lexer = new Lexer(codigoFuente);
         Parser parser = new Parser(lexer);
+        GeneradorASM generadorASM = new GeneradorASM();
 
         try {
             // 1. Analisis Sintactico y construccion del AST
@@ -39,6 +41,9 @@ public class Main {
             System.out.println("\n--- EJECUTANDO PROGRAMA ---");
             Evaluador evaluador = new Evaluador(parser.getSymbolTable());
             evaluador.ejecutar(arbolAST);
+
+            System.out.println("\n--- GENERANDO ASM ---");
+            generadorASM.generar(cuadruplos);
 
             parser.getSymbolTable().printTable();
         } catch (Exception e) {

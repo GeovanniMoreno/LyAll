@@ -1,4 +1,3 @@
-
 package codegen;
 
 import ast.Expresion;
@@ -22,9 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GeneradorCuadruplos {
-
     private final List<Cuadruplo> cuadruplos = new ArrayList<>();
-
     private int contadorTemporales = 1;
     private int contadorEtiquetas = 1;
 
