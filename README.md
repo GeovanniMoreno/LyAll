@@ -101,3 +101,18 @@ Falta implementar el codigo que genera el ASM osea el ensamblador que creo que i
 ## Generador de ASM colocado
 No se agrego lo del read y write porque era muchisimos lineas de codigo en pura impresion de las 300 se mandaba a 700-800 lineas de pura impresion
 Faltaria hacer mas archivos de prueba porque el que se llama Fuente.pas me dio algun error en la parte de declaracion de variables.
+
+---
+He terminao, obra maestra tan linda
+
+## Suite de testing
+
+Hice un sistema despachador de testing automatico por modulo, de tal forma que los tests se detectan y ejecutan de forma automatica.
+Literalmente nada mas xd.
+
+### Tester.java
+Esta clase es el entrypoint para la suite de testing, donde se enrutan las llamadas a los tests de distintos modulos.
+
+Puedes llamar todos los tests con el main sin argumentos, o puedes usar uno de los enums (el valor identico) para ejecutar los tests de un solo modulo.
+
+Fin. Gracias.
