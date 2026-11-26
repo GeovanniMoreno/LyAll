@@ -1,22 +1,9 @@
 package codegen;
 
 import ast.Expresion;
-import ast.Expresion.Binaria;
-import ast.Expresion.Booleano;
-import ast.Expresion.Entero;
-import ast.Expresion.Identificador;
-import ast.Expresion.Real;
-import ast.Expresion.Texto;
+import ast.Expresion.*;
 import ast.Sentencia;
-import ast.Sentencia.Asignacion;
-import ast.Sentencia.Bloque;
-import ast.Sentencia.Compuesta;
-import ast.Sentencia.Declaracion;
-import ast.Sentencia.If;
-import ast.Sentencia.Programa;
-import ast.Sentencia.Read;
-import ast.Sentencia.While;
-import ast.Sentencia.Write;
+import ast.Sentencia.*;
 import java.util.ArrayList;
 import java.util.List;
 
